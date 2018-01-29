@@ -15,12 +15,12 @@ const (
 
 // DefaultCapabilities sets the default capabilities of the client library
 var DefaultCapabilities = []string{
-	"urn:ietf:params:xml:ns:netconf:base:1.0",
+	"urn:ietf:params:netconf:base:1.0",
 }
 
 // HelloMessage is used when bringing up a NetConf session
 type HelloMessage struct {
-	XMLName      xml.Name `xml:"hello"`
+	XMLName      xml.Name `xml:"urn:ietf:params:xml:ns:netconf:base:1.0 hello"`
 	Capabilities []string `xml:"capabilities>capability"`
 	SessionID    int      `xml:"session-id,omitempty"`
 }
@@ -65,6 +65,7 @@ func (t *transportBasicIO) SendHello(hello *HelloMessage) error {
 
 	header := []byte(xml.Header)
 	val = append(header, val...)
+	log.Debugf("%s\n", val)
 	err = t.Send(val)
 	return err
 }
@@ -76,6 +77,7 @@ func (t *transportBasicIO) ReceiveHello() (*HelloMessage, error) {
 	if err != nil {
 		return hello, err
 	}
+	log.Debugf("%s\n", val)
 
 	err = xml.Unmarshal([]byte(val), hello)
 	return hello, err
@@ -98,6 +100,12 @@ func (t *transportBasicIO) WaitForFunc(f func([]byte) (int, error)) ([]byte, err
 			if err != io.EOF {
 				return nil, err
 			}
+			// Handle EOF but no message separator to mark
+			// the end of the message
+			if n == 0 {
+				out.Write(buf[0:pos])
+				return out.Bytes(), nil
+			}
 			break
 		}
 
@@ -106,7 +114,6 @@ func (t *transportBasicIO) WaitForFunc(f func([]byte) (int, error)) ([]byte, err
 			if err != nil {
 				return nil, err
 			}
-
 			if end > -1 {
 				out.Write(buf[0:end])
 				return out.Bytes(), nil

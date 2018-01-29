@@ -8,6 +8,7 @@ import (
 
 // RPCMessage represents an RPC Message to be sent.
 type RPCMessage struct {
+	Namespace string
 	MessageID string
 	Methods   []RPCMethod
 }
@@ -15,6 +16,7 @@ type RPCMessage struct {
 // NewRPCMessage generates a new RPC Message structure with the provided methods
 func NewRPCMessage(methods []RPCMethod) *RPCMessage {
 	return &RPCMessage{
+		Namespace: "urn:ietf:params:xml:ns:netconf:base:1.0",
 		MessageID: uuid(),
 		Methods:   methods,
 	}
@@ -28,9 +30,11 @@ func (m *RPCMessage) MarshalXML(e *xml.Encoder, start xml.StartElement) error {
 	}
 
 	data := struct {
+		Namespace string `xml:"xmlns,attr"`
 		MessageID string `xml:"message-id,attr"`
 		Methods   []byte `xml:",innerxml"`
 	}{
+		m.Namespace,
 		m.MessageID,
 		buf.Bytes(),
 	}
