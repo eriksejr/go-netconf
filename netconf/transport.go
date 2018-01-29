@@ -65,7 +65,6 @@ func (t *transportBasicIO) SendHello(hello *HelloMessage) error {
 
 	header := []byte(xml.Header)
 	val = append(header, val...)
-	log.Debugf("%s\n", val)
 	err = t.Send(val)
 	return err
 }
@@ -77,7 +76,6 @@ func (t *transportBasicIO) ReceiveHello() (*HelloMessage, error) {
 	if err != nil {
 		return hello, err
 	}
-	log.Debugf("%s\n", val)
 
 	err = xml.Unmarshal([]byte(val), hello)
 	return hello, err
